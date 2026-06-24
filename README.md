@@ -174,7 +174,7 @@ Make sure the following are installed on your Windows machine:
 ### Step 1 — Clone the Repository
  
 ```bash
-git clone[ https://github.com/YOUR_USERNAME/tutor-enrollment-platform.git](https://github.com/najmularifeen786/Tutor_Enrollment_Platform.git)
+git clone https://github.com/najmularifeen786/Tutor_Enrollment_Platform.git
 cd tutor-enrollment-platform
 ```
  
@@ -290,7 +290,7 @@ Visit `http://localhost:5173` in your browser.
  
 | Name | Contribution |
 |---|---|
-| [Your Name] | Full-stack development, database design, backend API, frontend integration, project architecture |
+| [Najmul Arifeen] | Full-stack development, database design, backend API, frontend integration, project architecture |
 | Hasnat | Frontend design contributions and database architecture support |
  
 > Parts of the frontend were initially scaffolded using **Google AI Studio** and then heavily customized, restructured, and extended to meet the project requirements — following modern AI-assisted development practices.
