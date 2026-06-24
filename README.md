@@ -290,7 +290,7 @@ Visit `http://localhost:5173` in your browser.
  
 | Name | Contribution |
 |---|---|
-| [Najmul Arifeen] | Full-stack development, database design, backend API, frontend integration, project architecture |
+| Najmul Arifeen | Full-stack development, database design, backend API, frontend integration, project architecture |
 | Hasnat | Frontend design contributions and database architecture support |
  
 > Parts of the frontend were initially scaffolded using **Google AI Studio** and then heavily customized, restructured, and extended to meet the project requirements — following modern AI-assisted development practices.
