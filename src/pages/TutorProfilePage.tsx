@@ -87,7 +87,7 @@ export default function TutorProfilePage({ tutorId, onNavigate }: TutorProfilePa
             
             <div className="flex justify-center gap-2 mb-6">
                <span className="px-3 py-1 bg-indigo-50 border-2 border-slate-900 text-slate-900 font-bold uppercase tracking-wider text-sm shadow-[2px_2px_0_0_#0f172a]">
-                 PKR {tutor.hourly_rate} / hr
+                 PKR {tutor.hourly_rate_pkr} / hr
                </span>
             </div>
 
@@ -135,8 +135,8 @@ export default function TutorProfilePage({ tutorId, onNavigate }: TutorProfilePa
                 </div>
                 <div className="space-y-2">
                   <p className="text-slate-700 font-bold"><span className="text-indigo-600">{tutor.experience_years} years</span> of teaching</p>
-                  {tutor.teaching_institution && (
-                    <p className="text-sm font-medium text-slate-600 border-t-2 border-slate-900 pt-2 mt-2">Past/Present: {tutor.teaching_institution} ({tutor.institution_type})</p>
+                  {tutor.teaching_institution_name && (
+                    <p className="text-sm font-medium text-slate-600 border-t-2 border-slate-900 pt-2 mt-2">Past/Present: {tutor.teaching_institution_name} ({tutor.institution_type})</p>
                   )}
                 </div>
              </div>

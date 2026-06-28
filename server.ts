@@ -9,7 +9,7 @@ import { createServer as createViteServer } from 'vite';
 import authRoutes from './backend/routes/auth.js';
 import tutorRoutes from './backend/routes/tutors.js';
 import adminRoutes from './backend/routes/admin.js';
-import { initializeDatabase } from './backend/db/dbFunctions.js';
+import { connectDatabase } from './backend/db/dbFunctions.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -40,10 +40,10 @@ app.get('/api/subjects', async (req, res) => {
     if (!pool) {
       return res.status(500).json({ success: false, data: [] });
     }
-    const result = await pool.request().query('SELECT subject_name FROM Subjects');
+    const result = await pool.query('SELECT subject_name FROM Subjects');
     res.json({
       success: true,
-      data: result.recordset.map(r => r.subject_name)
+      data: result.rows.map(r => r.subject_name)
     });
   } catch (err) {
     console.error("Fetch subjects error", err);
@@ -57,8 +57,8 @@ app.get('/api/cities', async (req, res) => {
     if (!pool) {
       return res.status(500).json({ success: false, data: [] });
     }
-    const result = await pool.request().query('SELECT city_id, city_name FROM Cities ORDER BY city_id');
-    res.json({ success: true, data: result.recordset });
+    const result = await pool.query('SELECT city_id, city_name FROM Cities ORDER BY city_id');
+    res.json({ success: true, data: result.rows });
   } catch (err) {
     console.error("Fetch cities error", err);
     res.status(500).json({ success: false, data: [] });
@@ -71,8 +71,8 @@ app.get('/api/qualifications', async (req, res) => {
     if (!pool) {
       return res.status(500).json({ success: false, data: [] });
     }
-    const result = await pool.request().query('SELECT qualification_id, qualification_name, qualification_level FROM Qualifications ORDER BY qualification_id');
-    res.json({ success: true, data: result.recordset });
+    const result = await pool.query('SELECT qualification_id, qualification_name, qualification_level FROM Qualifications ORDER BY qualification_id');
+    res.json({ success: true, data: result.rows });
   } catch (err) {
     console.error("Fetch qualifications error", err);
     res.status(500).json({ success: false, data: [] });
@@ -81,10 +81,12 @@ app.get('/api/qualifications', async (req, res) => {
 
 async function startServer() {
   try {
-    await initializeDatabase();
-  } catch (err) {
-    console.error("Failed to initialize database: Your local SQL Server (NAJAM) is unreachable from this cloud preview. It will work when you run the app locally!");
-  }
+    await connectDatabase();
+  } 
+  catch (err) {
+  console.error("Failed to connect to PostgreSQL database.");
+  console.error(err);
+}
 
   // Vite middleware for development
   if (process.env.NODE_ENV !== "production") {

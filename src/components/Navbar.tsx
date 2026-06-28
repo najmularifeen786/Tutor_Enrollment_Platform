@@ -2,7 +2,7 @@ import React from 'react';
 import { BookOpen, LogOut, User, LayoutDashboard, UserPlus } from 'lucide-react';
 
 interface NavbarProps {
-  user: { user_type: string; session_token: string } | null;
+  user: { user_type: string; token: string } | null;
   onLoginClick: () => void;
   onLogout: () => void;
   onNavigate: (page: string) => void;
@@ -22,7 +22,7 @@ export default function Navbar({ user, onLoginClick, onLogout, onNavigate }: Nav
             <BookOpen size={24} />
           </div>
           <span className="text-xl font-bold uppercase tracking-widest text-slate-900 hidden sm:block">
-            TutorPlatform
+            Tutor Platform
           </span>
         </div>
 

@@ -5,8 +5,8 @@ import { CheckCircle, Upload } from 'lucide-react';
 export default function TutorRegistrationForm({ onSuccess }: { onSuccess: () => void }) {
   const [formData, setFormData] = useState({
     username: '', password: '', name: '', phone: '', email: '', city_id: '', qualification_id: '',
-    experience_years: '', cnic_number: '', subjects: [] as string[], hourly_rate: '', bio: '',
-    teaching_institution: '', institution_type: 'School', teaching_mode: 'Physical',
+    experience_years: '', cnic_number: '', subjects: [] as string[], hourly_rate_pkr: '', bio: '',
+    teaching_institution_name: '', institution_type: 'School', teaching_mode: 'Physical',
     availability_schedule: ''
   });
   const [cities, setCities] = useState<{ city_id: number; city_name: string }[]>([]);
@@ -223,7 +223,7 @@ export default function TutorRegistrationForm({ onSuccess }: { onSuccess: () => 
           </div>
           <div>
             <label className="block text-sm font-bold uppercase tracking-wider text-slate-900 mb-2">Current/Past Teaching Institution</label>
-            <input type="text" name="teaching_institution" value={formData.teaching_institution} onChange={handleChange} className="w-full px-4 py-3 bg-white border-2 border-slate-900 focus:outline-none focus:border-indigo-600 text-slate-900 font-medium" />
+            <input type="text" name="teaching_institution_name" value={formData.teaching_institution_name} onChange={handleChange} className="w-full px-4 py-3 bg-white border-2 border-slate-900 focus:outline-none focus:border-indigo-600 text-slate-900 font-medium" />
           </div>
           <div>
              <label className="block text-sm font-bold uppercase tracking-wider text-slate-900 mb-2">Institution Type</label>
@@ -271,7 +271,7 @@ export default function TutorRegistrationForm({ onSuccess }: { onSuccess: () => 
           </div>
           <div>
             <label className="block text-sm font-bold uppercase tracking-wider text-slate-900 mb-2">Hourly Rate (PKR)*</label>
-            <input type="number" name="hourly_rate" min="0" required value={formData.hourly_rate} onChange={handleChange} className="w-full px-4 py-3 bg-white border-2 border-slate-900 focus:outline-none focus:border-indigo-600 text-slate-900 font-medium" />
+            <input type="number" name="hourly_rate_pkr" min="0" required value={formData.hourly_rate_pkr} onChange={handleChange} className="w-full px-4 py-3 bg-white border-2 border-slate-900 focus:outline-none focus:border-indigo-600 text-slate-900 font-medium" />
           </div>
         </div>
 

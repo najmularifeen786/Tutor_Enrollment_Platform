@@ -17,15 +17,15 @@ export default function App() {
   const [currentPage, setCurrentPage] = useState("home");
   const [selectedTutorId, setSelectedTutorId] = useState<number | null>(null);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-  const [user, setUser] = useState<{ user_type: string; session_token: string; user_id?: number } | null>(null);
+  const [user, setUser] = useState<{ user_type: string; token: string; user_id?: number } | null>(null);
 
   useEffect(() => {
     // Check session on load
-    const token = localStorage.getItem("session_token");
+    const token = localStorage.getItem("token");
     const userType = localStorage.getItem("user_type");
     const userId = localStorage.getItem("user_id");
     if (token && userType) {
-      setUser({ session_token: token, user_type: userType, user_id: userId ? parseInt(userId, 10) : undefined });
+      setUser({ token, user_type: userType, user_id: userId ? parseInt(userId, 10) : undefined });
     }
     
     // Theme setup
@@ -42,18 +42,18 @@ export default function App() {
   };
 
   const handleLogout = async () => {
-    if (user?.session_token) {
+    if (user?.token) {
       try {
         await fetch('/api/auth/logout', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ session_token: user.session_token })
+          body: JSON.stringify({ token: user.token })
         });
       } catch (e) {
         console.error("Logout error", e);
       }
     }
-    localStorage.removeItem("session_token");
+    localStorage.removeItem("token");
     localStorage.removeItem("user_type");
     localStorage.removeItem("user_id");
     setUser(null);

@@ -17,7 +17,7 @@ export default function TutorDashboard({ user, onNavigate }: any) {
     setError('');
     try {
       const res = await fetch('/api/tutors/profile', {
-        headers: { 'Authorization': `Bearer ${user.session_token}` }
+        headers: { 'Authorization': `Bearer ${user.token}` }
       });
       const data = await res.json();
       if (data.success) {
@@ -96,7 +96,7 @@ export default function TutorDashboard({ user, onNavigate }: any) {
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                  <div className="p-6 bg-white border-2 border-slate-900 shadow-[4px_4px_0_0_#0f172a]">
                     <div className="text-slate-600 text-xs font-bold uppercase tracking-wider mb-2">Hourly Rate</div>
-                    <div className="text-3xl font-bold text-slate-900">PKR {profile.hourly_rate}</div>
+                    <div className="text-3xl font-bold text-slate-900">PKR {profile.hourly_rate_pkr}</div>
                  </div>
                  <div className="p-6 bg-white border-2 border-slate-900 shadow-[4px_4px_0_0_#0f172a]">
                     <div className="text-slate-600 text-xs font-bold uppercase tracking-wider mb-2">Teaching Mode</div>

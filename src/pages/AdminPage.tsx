@@ -12,7 +12,7 @@ export default function AdminPage({ user }: any) {
   const fetchStats = async () => {
     try {
       const res = await fetch('/api/admin/statistics', {
-        headers: { 'Authorization': `Bearer ${user.session_token}` }
+        headers: { 'Authorization': `Bearer ${user.token}` }
       });
       const data = await res.json();
       if (data.success) {

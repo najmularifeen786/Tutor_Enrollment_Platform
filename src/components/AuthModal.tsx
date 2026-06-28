@@ -3,7 +3,7 @@ import { X } from 'lucide-react';
 
 interface AuthModalProps {
   onClose: () => void;
-  onLoginSuccess: (user: { user_type: string; session_token: string; user_id: number }) => void;
+  onLoginSuccess: (user: { user_type: string; token: string; user_id: number }) => void;
   onNavigate: (page: string) => void;
 }
 
@@ -28,10 +28,10 @@ export default function AuthModal({ onClose, onLoginSuccess, onNavigate }: AuthM
       
       const data = await res.json();
       if (data.success) {
-        localStorage.setItem('session_token', data.session_token);
+        localStorage.setItem('token', data.token);
         localStorage.setItem('user_type', data.user_type);
         localStorage.setItem('user_id', data.user_id.toString());
-        onLoginSuccess({ user_type: data.user_type, session_token: data.session_token, user_id: data.user_id });
+        onLoginSuccess({ user_type: data.user_type, token: data.token, user_id: data.user_id });
       } else {
         setError(data.message || 'Login failed');
       }

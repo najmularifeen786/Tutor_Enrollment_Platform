@@ -8,8 +8,8 @@ export default function TutorEditProfile({ profile, user, onUpdateSuccess }: any
     name: profile.name || '', phone: profile.phone || '', city_id: profile.city_id || '',
     experience_years: profile.experience_years || '', qualification_id: profile.qualification_id || '',
     subjects: profile.subjects ? profile.subjects.split(',').map((s:string) => s.trim()) : [] as string[], 
-    hourly_rate: profile.hourly_rate || '', bio: profile.bio || '',
-    teaching_institution: profile.teaching_institution || '', institution_type: profile.institution_type || 'School', 
+    hourly_rate_pkr: profile.hourly_rate_pkr || '', bio: profile.bio || '',
+    teaching_institution_name: profile.teaching_institution_name || '', institution_type: profile.institution_type || 'School', 
     teaching_mode: profile.teaching_mode || 'Physical', availability_schedule: profile.availability_schedule || ''
   });
   const [cities, setCities] = useState<{ city_id: number; city_name: string }[]>([]);
@@ -120,7 +120,7 @@ export default function TutorEditProfile({ profile, user, onUpdateSuccess }: any
       const res = await fetch('/api/tutors/profile', {
         method: 'PUT',
         headers: {
-          'Authorization': `Bearer ${user.session_token}`
+          'Authorization': `Bearer ${user.token}`
         },
         body: data,
       });
@@ -167,7 +167,7 @@ export default function TutorEditProfile({ profile, user, onUpdateSuccess }: any
         </div>
         <div>
           <label className="block text-sm font-bold uppercase tracking-wider text-slate-900 mb-2">Hourly Rate (PKR)</label>
-          <input type="number" name="hourly_rate" min="0" required value={formData.hourly_rate} onChange={handleChange} className="w-full px-4 py-3 bg-white border-2 border-slate-900 focus:outline-none focus:border-indigo-600 text-slate-900 font-medium" />
+          <input type="number" name="hourly_rate_pkr" min="0" required value={formData.hourly_rate_pkr} onChange={handleChange} className="w-full px-4 py-3 bg-white border-2 border-slate-900 focus:outline-none focus:border-indigo-600 text-slate-900 font-medium" />
         </div>
       </div>
 

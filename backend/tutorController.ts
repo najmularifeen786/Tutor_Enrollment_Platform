@@ -1,11 +1,11 @@
-import { Request, Response } from 'express';
-import { AuthRequest } from '../middleware/authMiddleware.js';
+﻿import { Request, Response } from 'express';
+import { AuthRequest } from './middleware/authMiddleware.ts';
 import {
   getTutorsService,
   getTutorByIdService,
   getTutorProfileService,
   updateTutorProfileService
-} from '../services/tutorService.js';
+} from './services/tutorService.ts';
 
 export const getTutors = async (req: Request, res: Response) => {
   try {
@@ -108,4 +108,3 @@ export const updateTutorProfile = async (req: AuthRequest, res: Response) => {
     res.status(500).json({ success: false, message: 'Failed to update profile' });
   }
 };
-

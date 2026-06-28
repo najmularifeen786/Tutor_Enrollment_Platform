@@ -10,7 +10,7 @@ async function build() {
     external: [
       'sqlite3',
       'better-sqlite3',
-      'mssql', 
+      'pg', 
       'express',
       'cors',
       'multer'

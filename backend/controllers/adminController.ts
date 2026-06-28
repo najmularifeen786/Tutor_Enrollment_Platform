@@ -1,6 +1,5 @@
 import { Request, Response } from 'express';
 import { pool } from '../db/dbFunctions.js';
-import sql from 'mssql';
 
 export const getAllTutors = async (req: Request, res: Response) => {
   try {
@@ -9,7 +8,6 @@ export const getAllTutors = async (req: Request, res: Response) => {
     }
 
     const { status } = req.query; // 'all', 'active', or 'inactive'
-    const request = pool.request();
 
     let query = `SELECT t.tutor_id,
                         CONCAT(t.first_name, ' ', t.last_name) AS name,
@@ -19,36 +17,31 @@ export const getAllTutors = async (req: Request, res: Response) => {
                  FROM Tutors t`;
 
     if (status === 'active') {
-      query += ' WHERE t.is_active = 1';
+      query += ' WHERE t.is_active = TRUE';
     } else if (status === 'inactive') {
-      query += ' WHERE t.is_active = 0';
+      query += ' WHERE t.is_active = FALSE';
     }
 
     query += ' ORDER BY t.created_at DESC';
 
-    const tutorsResult = await request.query(query);
-    const tutors = tutorsResult.recordset;
+    const tutorsResult = await pool.query(query);
+    const tutors = tutorsResult.rows;
 
     // Load all subject names for returned tutors in one query
     const tutorIds = tutors.map((t: any) => t.tutor_id);
     let subjectMap: Record<number, string[]> = {};
 
     if (tutorIds.length > 0) {
-      const subjectRequest = pool.request();
-      const paramNames = tutorIds.map((id: number, idx: number) => {
-        const paramName = `id${idx}`;
-        subjectRequest.input(paramName, sql.Int, id);
-        return `@${paramName}`;
-      });
+      const placeholderNames = tutorIds.map((_, idx) => `$${idx + 1}`);
 
-      const subjectsResult = await subjectRequest.query(`
+      const subjectsResult = await pool.query(`
           SELECT ts.tutor_id, s.subject_name
           FROM TutorSubjects ts
           JOIN Subjects s ON ts.subject_id = s.subject_id
-          WHERE ts.tutor_id IN (${paramNames.join(',')})
-        `);
+          WHERE ts.tutor_id IN (${placeholderNames.join(',')})
+        `, tutorIds);
 
-      subjectMap = subjectsResult.recordset.reduce((map: Record<number, string[]>, row: any) => {
+      subjectMap = subjectsResult.rows.reduce((map: Record<number, string[]>, row: any) => {
         const id = row.tutor_id;
         if (!map[id]) map[id] = [];
         map[id].push(row.subject_name);
@@ -78,26 +71,60 @@ export const getTutorDetailed = async (req: Request, res: Response) => {
     }
 
     const { tutor_id } = req.params;
-    const request = pool.request();
-    request.input('tutor_id', sql.Int, tutor_id);
-    
-    // Use SP_GetTutorProfile stored procedure for comprehensive tutor data
-    const profileResult = await request.execute('SP_GetTutorProfile');
-    const recordsets = Array.isArray(profileResult.recordsets)
-      ? profileResult.recordsets
-      : Object.values(profileResult.recordsets);
 
-    if (!recordsets || recordsets.length === 0 || !recordsets[0]?.[0]) {
+    const tutorResult = await pool.query(`
+        SELECT t.tutor_id,
+               CONCAT(t.first_name, ' ', t.last_name) AS full_name,
+               t.email,
+               t.phone,
+               t.city_id,
+               c.city_name,
+               t.highest_qualification_id,
+               q.qualification_name,
+               t.years_of_experience,
+               t.hourly_rate_pkr AS hourly_rate_pkr,
+               t.bio,
+               t.teaching_institution_name,
+               it.type_name AS institution_type,
+               tm.mode_name AS teaching_mode,
+               t.cnic_number,
+               t.username,
+               t.is_active,
+               t.created_at
+        FROM Tutors t
+        LEFT JOIN Cities c ON t.city_id = c.city_id
+        LEFT JOIN Qualifications q ON t.highest_qualification_id = q.qualification_id
+        LEFT JOIN InstitutionTypes it ON t.institution_type_id = it.institution_type_id
+        LEFT JOIN TeachingModes tm ON t.teaching_mode_id = tm.teaching_mode_id
+        WHERE t.tutor_id = $1
+      `, [tutor_id]);
+
+    if (!tutorResult.rows || tutorResult.rows.length === 0) {
       return res.status(404).json({ success: false, message: 'Tutor not found' });
     }
 
-    const tutor = recordsets[0][0]; // First result set is tutor details
-    const subjects = recordsets[1] || []; // Second result set is subjects
-    const availability = recordsets[2] || []; // Third result set is availability
+    const tutor = tutorResult.rows[0];
+
+    const subjectsResult = await pool.query(`
+        SELECT s.subject_name
+        FROM TutorSubjects ts
+        JOIN Subjects s ON ts.subject_id = s.subject_id
+        WHERE ts.tutor_id = $1
+      `, [tutor_id]);
+
+    const availabilityResult = await pool.query(`
+        SELECT day_of_week, start_time, end_time
+        FROM TutorAvailability
+        WHERE tutor_id = $1
+        ORDER BY day_of_week
+      `, [tutor_id]);
+
+    const subjects = subjectsResult.rows || [];
+    const availability = availabilityResult.rows || [];
 
     // Map fields for frontend compatibility
     tutor.name = tutor.full_name;
-    tutor.hourly_rate = tutor.hourly_rate_pkr;
+    tutor.hourly_rate_pkr = tutor.hourly_rate_pkr;
     tutor.experience_years = tutor.years_of_experience;
     tutor.latest_degree_title = tutor.qualification_name;
     tutor.city = tutor.city_name;
@@ -105,11 +132,12 @@ export const getTutorDetailed = async (req: Request, res: Response) => {
     tutor.availability_schedule = availability.map((a: any) => `${a.day_of_week}: ${a.start_time}-${a.end_time}`).join('; ') || 'No availability set';
     
     // Get documents
-    const docs = await pool.request()
-      .input('tutor_id', sql.Int, tutor.tutor_id)
-      .query(`SELECT document_type, file_path FROM TutorDocuments WHERE tutor_id = @tutor_id`);
+    const docsResult = await pool.query(
+      `SELECT document_type, file_path FROM TutorDocuments WHERE tutor_id = $1`,
+      [tutor.tutor_id]
+    );
       
-    for (const doc of docs.recordset) {
+    for (const doc of docsResult.rows) {
       if (doc.document_type === 'ProfilePicture') tutor.profile_picture_path = doc.file_path;
       if (doc.document_type === 'DegreeCertificate') tutor.degree_certificate_path = doc.file_path;
       if (doc.document_type === 'CNIC') tutor.cnic_document_path = doc.file_path;
@@ -132,11 +160,7 @@ export const activateTutor = async (req: Request, res: Response) => {
     }
 
     const { tutor_id } = req.params;
-    
-    // Use SP_ActivateTutor stored procedure
-    await pool.request()
-        .input('tutorId', sql.Int, tutor_id)
-        .execute('SP_ActivateTutor');
+    await pool.query('UPDATE Tutors SET is_active = TRUE WHERE tutor_id = $1', [tutor_id]);
     
     res.json({ success: true, message: 'Tutor activated successfully' });
   } catch (error) {
@@ -152,11 +176,7 @@ export const deactivateTutor = async (req: Request, res: Response) => {
     }
 
     const { tutor_id } = req.params;
-    
-    // Use SP_DeactivateTutor stored procedure
-    await pool.request()
-        .input('tutorId', sql.Int, tutor_id)
-        .execute('SP_DeactivateTutor');
+    await pool.query('UPDATE Tutors SET is_active = FALSE WHERE tutor_id = $1', [tutor_id]);
     
     res.json({ success: true, message: 'Tutor deactivated successfully' });
   } catch (error) {
@@ -171,11 +191,19 @@ export const getStatistics = async (req: Request, res: Response) => {
       return res.status(500).json({ success: false, message: 'Database not connected.' });
     }
 
-    // Use SP_GetDashboardStatistics stored procedure
-    const statsResult = await pool.request().execute('SP_GetDashboardStatistics');
-    const stats = statsResult.recordset[0];
+    const statsResult = await pool.query(`
+      SELECT
+        COUNT(*) AS total_tutors,
+        SUM(CASE WHEN is_active = TRUE THEN 1 ELSE 0 END) AS active_tutors,
+        SUM(CASE WHEN is_active = FALSE THEN 1 ELSE 0 END) AS inactive_tutors,
+        SUM(CASE WHEN created_at::date = CURRENT_DATE THEN 1 ELSE 0 END) AS new_tutors_today,
+        COUNT(DISTINCT city_id) AS num_cities,
+        AVG(hourly_rate_pkr::numeric(10,2)) AS avg_hourly_rate_pkr
+      FROM Tutors
+    `);
+    const stats = statsResult.rows[0] || {};
     
-    const subjectsCountRes = await pool.request().query('SELECT COUNT(*) as count FROM Subjects');
+    const subjectsCountRes = await pool.query('SELECT COUNT(*) as count FROM Subjects');
 
     res.json({
       success: true,
@@ -184,9 +212,10 @@ export const getStatistics = async (req: Request, res: Response) => {
         active_tutors: stats.active_tutors,
         inactive_tutors: stats.inactive_tutors,
         new_tutors_today: stats.new_tutors_today,
+        total_registrations_today: stats.new_tutors_today,
         num_cities: stats.num_cities,
-        avg_hourly_rate: stats.avg_hourly_rate,
-        subjects_count: subjectsCountRes.recordset[0].count
+        avg_hourly_rate_pkr: stats.avg_hourly_rate_pkr,
+        subjects_count: subjectsCountRes.rows[0].count
       }
     });
 

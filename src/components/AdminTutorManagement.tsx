@@ -20,7 +20,7 @@ export default function AdminTutorManagement({ user }: any) {
       }
       
       const res = await fetch(`/api/admin/tutors${queryParams.toString() ? `?${queryParams.toString()}` : ''}`, {
-        headers: { 'Authorization': `Bearer ${user.session_token}` }
+        headers: { 'Authorization': `Bearer ${user.token}` }
       });
       const data = await res.json();
       if (data.success) {
@@ -38,7 +38,7 @@ export default function AdminTutorManagement({ user }: any) {
     try {
       const res = await fetch(`/api/admin/tutor/${tutorId}/${endpoint}`, {
         method: 'PUT',
-        headers: { 'Authorization': `Bearer ${user.session_token}` }
+        headers: { 'Authorization': `Bearer ${user.token}` }
       });
       const data = await res.json();
       if (data.success) {

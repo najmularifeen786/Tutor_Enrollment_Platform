@@ -7,7 +7,7 @@ interface Tutor {
   city: string;
   experience_years: number;
   subjects: string;
-  hourly_rate: number;
+  hourly_rate_pkr: number;
   bio: string;
   teaching_mode: string;
   profile_picture_path?: string;
@@ -59,7 +59,7 @@ export default function TutorCard({ tutor, onViewProfile }: TutorCardProps) {
           </div>
           <div className="text-right">
             <div className="font-bold text-xl text-indigo-600 flex items-center justify-end">
-              PKR {tutor.hourly_rate}
+              PKR {tutor.hourly_rate_pkr}
               <span className="text-sm font-bold text-slate-500 ml-1">/ hr</span>
             </div>
           </div>

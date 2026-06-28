@@ -1,12 +1,10 @@
 import { Request, Response, NextFunction } from 'express';
-import { pool } from '../db/dbFunctions.js';
-import sql from 'mssql';
+import jwt from 'jsonwebtoken';
 
 export interface AuthRequest extends Request {
   user?: {
     user_type: string;
     user_id: number;
-    session_token: string;
   };
 }
 
@@ -21,30 +19,22 @@ export async function authMiddleware(req: AuthRequest, res: Response, next: Next
     return res.status(401).json({ success: false, message: 'Invalid token format' });
   }
 
-  if (!pool) {
-    return res.status(500).json({ success: false, message: 'Database not connected.' });
-  }
-
   try {
-    const sessionRes = await pool.request()
-      .input('token', sql.NVarChar, token)
-      .query('SELECT * FROM Sessions WHERE session_token = @token AND expires_at > GETDATE()');
-    
-    const session = sessionRes.recordset[0];
-    
-    if (!session) {
-      return res.status(401).json({ success: false, message: 'Session expired or invalid' });
+    const secret = process.env.JWT_SECRET || 'your_secret_key';
+    const payload = jwt.verify(token, secret);
+
+    if (!payload || typeof payload !== 'object' || !('user_id' in payload) || !('user_type' in payload)) {
+      return res.status(401).json({ success: false, message: 'Invalid or expired token' });
     }
 
     req.user = {
-      user_type: session.user_type,
-      user_id: session.user_id,
-      session_token: token
+      user_type: String(payload.user_type),
+      user_id: Number(payload.user_id)
     };
     next();
-  } catch (error) {
+  } catch (error: any) {
     console.error('Auth error:', error);
-    res.status(500).json({ success: false, message: 'Server error during authentication' });
+    return res.status(401).json({ success: false, message: 'Invalid or expired token' });
   }
 }
 
