@@ -9,7 +9,7 @@ export default function Footer() {
           {/* Left */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#cbd5e1', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
             <span>© {new Date().getFullYear()} TutorPlatform.</span>
-            <a href="https://github.com/najmularifeen786/Tutor_Enrollment_Platform" target="_blank" rel="noopener noreferrer" style={{ color: '#818cf8', textDecoration: 'none' }}>
+            <a href="https://github.com/najmularifeen786/Tutor_Enrollment_Platform/tree/postgresql-version" target="_blank" rel="noopener noreferrer" style={{ color: '#818cf8', textDecoration: 'none' }}>
               <p>  &emsp;&emsp;&emsp; Open Source Project</p>
               
             </a>
