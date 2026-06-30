@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { pool } from '../db/dbFunctions.js';
+import { pool } from '../db/dbFunctions.js'; // Ensure this matches your path configuration
 
 export const getAllTutors = async (req: Request, res: Response) => {
   try {
@@ -7,7 +7,7 @@ export const getAllTutors = async (req: Request, res: Response) => {
       return res.status(500).json({ success: false, message: 'Database not connected.' });
     }
 
-    const { status } = req.query; // 'all', 'active', or 'inactive'
+    const status = typeof req.query.status === 'string' ? req.query.status : undefined; // 'all', 'active', or 'inactive'
 
     let query = `SELECT t.tutor_id,
                         CONCAT(t.first_name, ' ', t.last_name) AS name,
@@ -70,7 +70,10 @@ export const getTutorDetailed = async (req: Request, res: Response) => {
       return res.status(500).json({ success: false, message: 'Database not connected.' });
     }
 
-    const { tutor_id } = req.params;
+    const tutor_id = parseInt(req.params.tutor_id, 10);
+    if (Number.isNaN(tutor_id)) {
+      return res.status(400).json({ success: false, message: 'Invalid tutor_id' });
+    }
 
     const tutorResult = await pool.query(`
         SELECT t.tutor_id,
@@ -147,7 +150,7 @@ export const getTutorDetailed = async (req: Request, res: Response) => {
       success: true,
       data: tutor
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Get detailed tutor error', error);
     res.status(500).json({ success: false, message: 'Failed to fetch tutor details' });
   }
@@ -159,9 +162,12 @@ export const activateTutor = async (req: Request, res: Response) => {
       return res.status(500).json({ success: false, message: 'Database not connected.' });
     }
 
-    const { tutor_id } = req.params;
+    const tutor_id = parseInt(req.params.tutor_id, 10);
+    if (Number.isNaN(tutor_id)) {
+      return res.status(400).json({ success: false, message: 'Invalid tutor_id' });
+    }
+
     await pool.query('UPDATE Tutors SET is_active = TRUE WHERE tutor_id = $1', [tutor_id]);
-    
     res.json({ success: true, message: 'Tutor activated successfully' });
   } catch (error) {
     console.error('Activate tutor error', error);
@@ -175,9 +181,12 @@ export const deactivateTutor = async (req: Request, res: Response) => {
       return res.status(500).json({ success: false, message: 'Database not connected.' });
     }
 
-    const { tutor_id } = req.params;
+    const tutor_id = parseInt(req.params.tutor_id, 10);
+    if (Number.isNaN(tutor_id)) {
+      return res.status(400).json({ success: false, message: 'Invalid tutor_id' });
+    }
+
     await pool.query('UPDATE Tutors SET is_active = FALSE WHERE tutor_id = $1', [tutor_id]);
-    
     res.json({ success: true, message: 'Tutor deactivated successfully' });
   } catch (error) {
     console.error('Deactivate tutor error', error);
@@ -218,10 +227,8 @@ export const getStatistics = async (req: Request, res: Response) => {
         subjects_count: subjectsCountRes.rows[0].count
       }
     });
-
   } catch (error) {
     console.error('Get statistics error', error);
     res.status(500).json({ success: false, message: 'Failed to fetch statistics' });
   }
 };
-

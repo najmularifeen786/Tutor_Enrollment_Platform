@@ -2,13 +2,17 @@ import path from 'path';
 import { pool } from '../db/dbFunctions.js';
 import jwt from 'jsonwebtoken';
 
-const normalizeDocumentPath = (filePath: string) => filePath.replace(/^\/?uploads\/?/, '');
+// Cloudinary paths are full URLs, so we just return the URL directly instead of parsing local folders
+const normalizeDocumentPath = (filePath: string) => filePath;
 const normalizeCNIC = (cnic?: string) => String(cnic || '').replace(/\D/g, '');
+
 const getDocumentMetadata = (file: Express.Multer.File) => ({
-  file_name: file.filename,
+  // Multer-storage-cloudinary populates file.path with the full cloud URL
+  file_name: file.path, 
   document_title: file.originalname,
-  file_size_kb: Math.round(file.size / 1024),
-  file_extension: path.extname(file.originalname).replace(/^[.]/, '').toLowerCase()
+  file_size_kb: file.size ? Math.round(file.size / 1024) : 0,
+  // Fallback for extension parsing if public_id strips it
+  file_extension: path.extname(file.originalname).replace(/^[.]/, '').toLowerCase() || 'png'
 });
 
 const parseAvailabilitySchedule = (rawAvailability: any) => {
@@ -63,13 +67,13 @@ const parseAvailabilitySchedule = (rawAvailability: any) => {
       const normalizedEndHour = convertHour(endHour, endPeriod, startPeriod ? undefined : normalizedStartHour);
 
       start_time = formatTime(normalizedStartHour, startMin);
-      end_time = formatTime(normalizedEndHour, endMin);
+      const source_time = formatTime(normalizedEndHour, endMin);
     }
 
     if (!day_of_week) {
       throw new Error('Availability schedule must include both a day and time range.');
     }
-    parsed.push({ day_of_week, start_time, end_time, notes: timeNote });
+    parsed.push({ day_of_week, start_time, end_time: timeMatch ? formatTime(convertHour(parseInt(timeMatch[4], 10), timeMatch[6] || timeMatch[3], convertHour(parseInt(timeMatch[1], 10), timeMatch[3])), timeMatch[5] ? parseInt(timeMatch[5], 10) : 0) : '17:00:00', notes: timeNote });
   }
 
   return parsed;
@@ -211,7 +215,7 @@ export async function registerTutorService(params: {
     const file = files[document.field]?.[0];
     if (file) {
       const metadata = getDocumentMetadata(file);
-      const normalizedPath = normalizeDocumentPath(metadata.file_name);
+      const normalizedPath = normalizeDocumentPath(metadata.file_name); // Saves full secure URL string cleanly
       await pool.query(
         `INSERT INTO TutorDocuments (tutor_id, document_type, document_title, file_path, file_size_kb, file_extension)
                VALUES ($1, $2, $3, $4, $5, $6)`,
@@ -231,7 +235,7 @@ export async function registerTutorService(params: {
     for (const entry of parsedAvailability) {
       await pool.query(
         `INSERT INTO TutorAvailability (tutor_id, day_of_week, start_time, end_time, notes)
-                VALUES ($1, $2, $3, $4, $5)`,
+                 VALUES ($1, $2, $3, $4, $5)`,
         [tutor_id, entry.day_of_week, entry.start_time, entry.end_time, entry.notes || null]
       );
     }

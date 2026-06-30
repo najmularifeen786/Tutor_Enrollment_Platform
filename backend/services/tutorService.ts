@@ -2,13 +2,17 @@ import path from 'path';
 import pool from '../config/db.js';
 import { AuthRequest } from '../middleware/authMiddleware.js';
 
-const normalizeDocumentPath = (filePath: string) => filePath.replace(/^\/?uploads\/?/, '');
+// Cloudinary paths are full URLs, so return the URL directly instead of stripping folders
+const normalizeDocumentPath = (filePath: string) => filePath;
+
 const getDocumentMetadata = (file: Express.Multer.File) => ({
-  file_name: file.filename,
+  // Multer-storage-cloudinary populates file.path with the full cloud web URL
+  file_name: file.path, 
   document_title: file.originalname,
-  file_size_kb: Math.round(file.size / 1024),
-  file_extension: path.extname(file.originalname).replace(/^[.]/, '').toLowerCase()
+  file_size_kb: file.size ? Math.round(file.size / 1024) : 0,
+  file_extension: path.extname(file.originalname).replace(/^[.]/, '').toLowerCase() || 'png'
 });
+
 const parseAvailabilitySchedule = (rawAvailability: any) => {
   const availability = String(rawAvailability || '').trim();
   if (!availability) return null;
